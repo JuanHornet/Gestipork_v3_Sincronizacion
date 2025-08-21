@@ -3,7 +3,7 @@ package com.example.gestipork_v3_sincronizacion.data.models;
 
 import com.google.gson.annotations.SerializedName;
 
-public class Conteo extends BaseEntity {
+public class Contar extends BaseEntity {
 
     @SerializedName("id_lote") private String id_lote;
     @SerializedName("id_explotacion") private String id_explotacion;

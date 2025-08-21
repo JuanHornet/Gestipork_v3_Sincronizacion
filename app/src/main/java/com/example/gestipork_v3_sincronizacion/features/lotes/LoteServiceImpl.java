@@ -24,7 +24,7 @@ public class LoteServiceImpl implements LoteService {
     private final AccionRepository accionRepo;
     private final NotaRepository notaRepo;
     private final PesoRepository pesoRepo;
-    private final ConteoRepository conteoRepo;
+    private final ContarRepository conteoRepo;
 
     public LoteServiceImpl(Context ctx) {
         this.dbh = new DBHelper(ctx);
@@ -37,7 +37,7 @@ public class LoteServiceImpl implements LoteService {
         this.accionRepo = new AccionRepository(dbh);
         this.notaRepo = new NotaRepository(dbh);
         this.pesoRepo = new PesoRepository(dbh);
-        this.conteoRepo = new ConteoRepository(dbh);
+        this.conteoRepo = new ContarRepository(dbh);
     }
 
     // ---------- 1:1 ----------
@@ -200,7 +200,7 @@ public class LoteServiceImpl implements LoteService {
     @Override
     public String agregarConteo(String idLote, String idExplotacion, String fechaISO,
                                 int nAnimales, String observaciones) {
-        Conteo c = new Conteo();
+        Contar c = new Contar();
         c.setId(IdUtils.uuid());
         c.setId_lote(idLote);
         c.setId_explotacion(idExplotacion);
