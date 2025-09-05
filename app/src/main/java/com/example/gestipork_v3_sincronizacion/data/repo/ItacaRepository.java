@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.example.gestipork_v3_sincronizacion.base.FechaUtils;
 import com.example.gestipork_v3_sincronizacion.data.db.DBHelper;
 import com.example.gestipork_v3_sincronizacion.data.models.Itaca;
 import com.example.gestipork_v3_sincronizacion.network.ApiClient;
@@ -12,6 +13,7 @@ import com.example.gestipork_v3_sincronizacion.network.services.GenericSupabaseS
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import retrofit2.Response;
 
@@ -223,6 +225,30 @@ public class ItacaRepository {
         i.setSincronizado(1);
         return i;
     }
+
+    /** Actualiza Itaca en SQLite, marca sincronizado=0 y refresca fecha_actualizacion. */
+    public int update(Itaca i) {
+        SQLiteDatabase db = dbh.getWritableDatabase();
+        ContentValues v = new ContentValues();
+        v.put("id_lote", i.getId_lote());
+        v.put("id_explotacion", i.getId_explotacion());
+        v.put("nombre_lote", i.getNombre_lote());
+        v.put("nAnimales", i.getnAnimales());
+        v.put("nMadres", i.getnMadres());
+        v.put("nPadres", i.getnPadres());
+        v.put("fechaPrimerNacimiento", i.getFechaPrimerNacimiento());
+        v.put("fechaUltimoNacimiento", i.getFechaUltimoNacimiento());
+        v.put("raza", i.getRaza());
+        v.put("color", i.getColor());
+        v.put("crotalesSolicitados", i.getCrotalesSolicitados());
+        v.put("dcer", i.getDcer());
+        v.put("fecha_actualizacion", FechaUtils.ahoraIso());
+        v.put("sincronizado", 0);
+        return db.update("itaca", v, "id=?", new String[]{ i.getId() });
+    }
+
+
+
 
     private String getS(JsonObject o, String k){ return o.has(k)&&!o.get(k).isJsonNull()?o.get(k).getAsString():null; }
     private int getI(JsonObject o, String k){ return o.has(k)&&!o.get(k).isJsonNull()?o.get(k).getAsInt():0; }

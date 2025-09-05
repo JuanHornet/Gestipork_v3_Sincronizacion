@@ -5,9 +5,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".login.LoginActivity">
+    tools:context=".ui.login.LoginActivity">
 
-    <!-- Área azul superior -->
+    <!-- Área morada superior -->
     <View
         android:id="@+id/areaSuperior"
         android:layout_width="0dp"
@@ -20,16 +20,18 @@
         android:clickable="false"
         android:focusable="false"/>
 
-    <!-- Toolbar sobre el área azul -->
-    <androidx.appcompat.widget.Toolbar
+    <!-- Toolbar Material (centra título correctamente) -->
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
         android:background="@android:color/transparent"
         app:title="GestiPork"
         app:titleTextColor="@android:color/white"
         app:titleCentered="true"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <!-- Título grande -->
     <TextView
@@ -45,19 +47,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="8dp" />
 
-    <!-- Icono cerdo -->
+    <!-- Icono cerdo (decorativo) -->
     <ImageView
         android:id="@+id/iconoCerdo"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:src="@drawable/ic_pig"
-        android:contentDescription="Icono cerdo"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no"
         app:layout_constraintTop_toBottomOf="@id/tituloLogin"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="8dp" />
 
-    <!-- CardView superpuesto (más ancho) -->
+    <!-- Card de login -->
     <androidx.cardview.widget.CardView
         android:id="@+id/cardLogin"
         android:layout_width="0dp"
@@ -77,47 +80,63 @@
             android:orientation="vertical"
             android:padding="24dp">
 
-            <!-- Campo Email -->
+            <!-- Email -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilEmail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="16dp"
+                app:helperText="Usa un email válido">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editTextUsername"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Usuario (Email)"
-                    android:inputType="textEmailAddress" />
+                    android:inputType="textEmailAddress"
+                    android:imeOptions="actionNext"
+                    android:autofillHints="emailAddress" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Campo Contraseña -->
+            <!-- Password con toggle -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp">
+                android:layout_marginBottom="16dp"
+                app:endIconMode="password_toggle"
+                app:helperText="Mínimo 6 caracteres">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editTextPassword"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Contraseña"
-                    android:inputType="textPassword" />
+                    android:inputType="textPassword"
+                    android:imeOptions="actionDone"
+                    android:autofillHints="password" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Botón Iniciar Sesión -->
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLogin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Iniciar Sesión"
-                android:backgroundTint="#6750A4"
+                android:textAllCaps="false"
                 android:textColor="@android:color/white"
-                android:textAllCaps="false" />
-        </LinearLayout>
+                android:backgroundTint="#6750A4"
+                app:cornerRadius="16dp" />
 
+            <!-- Progreso (controlado desde la Activity) -->
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/progressLogin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone" />
+        </LinearLayout>
     </androidx.cardview.widget.CardView>
 
     <!-- Enlace de registro -->
@@ -134,7 +153,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp"/>
 
-    <!-- Enlace de recuperación de contraseña -->
+    <!-- Enlace recuperar contraseña -->
     <TextView
         android:id="@+id/txtOlvidarContrasena"
         android:layout_width="wrap_content"
@@ -148,6 +167,5 @@
         app:layout_constraintTop_toBottomOf="@id/txtRegistro"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

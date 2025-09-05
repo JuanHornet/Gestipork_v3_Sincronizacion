@@ -1,21 +1,22 @@
-// sync/SyncWorker.java
 package com.example.gestipork_v3_sincronizacion.sync.workers;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.example.gestipork_v3_sincronizacion.base.FechaUtils;
 import com.example.gestipork_v3_sincronizacion.data.db.DBHelper;
 import com.example.gestipork_v3_sincronizacion.data.repo.*;
+import com.example.gestipork_v3_sincronizacion.sync.SincronizadorMembresias;
+// Si tienes SessionManager, descomenta la siguiente línea y úsalo para obtener el userId:
+// import com.example.gestipork_v3_sincronizacion.base.SessionManager;
 
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import java.util.Set;
 
 public class SyncWorker extends Worker {
 
@@ -45,22 +46,55 @@ public class SyncWorker extends Worker {
 
         String lastSyncAcciones = prefs.getString(KEY_LAST_SYNC_ACCIONES, "1970-01-01T00:00:00");
         String lastSyncSalidas  = prefs.getString(KEY_LAST_SYNC_SALIDAS,  "1970-01-01T00:00:00");
-        String lastSyncLotes = prefs.getString(KEY_LAST_SYNC_LOTES, "1970-01-01T00:00:00");
-        String lastParideras   = prefs.getString(KEY_LAST_SYNC_PARIDERAS,   "1970-01-01T00:00:00");
-        String lastCubriciones = prefs.getString(KEY_LAST_SYNC_CUBRICIONES, "1970-01-01T00:00:00");
-        String lastItaca       = prefs.getString(KEY_LAST_SYNC_ITACA,       "1970-01-01T00:00:00");
-        String lastSyncNotas = prefs.getString(KEY_LAST_SYNC_NOTAS, "1970-01-01T00:00:00");
-        String lastSyncContar = prefs.getString(KEY_LAST_SYNC_CONTAR, "1970-01-01T00:00:00");
-        String lastSyncPesos = prefs.getString(KEY_LAST_SYNC_PESOS, "1970-01-01T00:00:00");
-        String nowIso = nowIso();
+        String lastSyncLotes    = prefs.getString(KEY_LAST_SYNC_LOTES,    "1970-01-01T00:00:00");
+        String lastParideras    = prefs.getString(KEY_LAST_SYNC_PARIDERAS,"1970-01-01T00:00:00");
+        String lastCubriciones  = prefs.getString(KEY_LAST_SYNC_CUBRICIONES,"1970-01-01T00:00:00");
+        String lastItaca        = prefs.getString(KEY_LAST_SYNC_ITACA,    "1970-01-01T00:00:00");
+        String lastSyncNotas    = prefs.getString(KEY_LAST_SYNC_NOTAS,    "1970-01-01T00:00:00");
+        String lastSyncContar   = prefs.getString(KEY_LAST_SYNC_CONTAR,   "1970-01-01T00:00:00");
+        String lastSyncPesos    = prefs.getString(KEY_LAST_SYNC_PESOS,    "1970-01-01T00:00:00");
+        String now = FechaUtils.ahoraIso();
 
         boolean ok = true;
 
+        // ============ PASO 0: Membresías (obtener explotaciones autorizadas) ============
+        Set<String> explotacionesAutorizadas;
+        try {
+            // Obtén el id de usuario desde tu sesión:
+            // Si tienes SessionManager:
+            // String userId = new SessionManager(ctx).getUserId();
+            // Si lo guardas en SharedPreferences de auth:
+            String userId = ctx.getSharedPreferences("auth", Context.MODE_PRIVATE)
+                    .getString("user_id", "");
+
+            if (TextUtils.isEmpty(userId)) {
+                Log.w(TAG, "No hay userId en sesión; se aborta sincronización.");
+                return Result.retry();
+            }
+
+            SincronizadorMembresias syncMem = new SincronizadorMembresias(ctx, dbh);
+            explotacionesAutorizadas = syncMem.sincronizarYObtenerExplotaciones(userId);
+
+            if (explotacionesAutorizadas == null || explotacionesAutorizadas.isEmpty()) {
+                Log.i(TAG, "Usuario sin explotaciones autorizadas; nada que sincronizar.");
+                // Éxito “vacío”: no avanzamos cursores del resto para no falsear marcas.
+                return Result.success();
+            }
+
+            Log.i(TAG, "Explotaciones autorizadas: " + explotacionesAutorizadas.size());
+        } catch (Exception e) {
+            ok = false;
+            Log.e(TAG, "Error en PASO 0 (membresías)", e);
+            return Result.retry();
+        }
+        // ================================================================================
+
         // === LOTES ===
-
-
         try {
             LoteRepository lotes = new LoteRepository(dbh);
+            // Si has añadido sobrecargas que aceptan el set, úsalo:
+            // int subidas = lotes.pushPendientes(explotacionesAutorizadas);
+            // int bajadas = lotes.pullDesde(lastSyncLotes, explotacionesAutorizadas);
 
             int subidas = lotes.pushPendientes();
             Log.i(TAG, "Lotes subidos: " + subidas);
@@ -73,46 +107,57 @@ public class SyncWorker extends Worker {
         }
 
         // si todo OK:
-        prefs.edit()
-                .putString(KEY_LAST_SYNC_ACCIONES, nowIso)
-                .putString(KEY_LAST_SYNC_SALIDAS,  nowIso)
-                .putString(KEY_LAST_SYNC_LOTES,   nowIso)
-                .apply();
+        if (ok) {
+            prefs.edit()
+                    .putString(KEY_LAST_SYNC_ACCIONES, now)
+                    .putString(KEY_LAST_SYNC_SALIDAS,  now)
+                    .putString(KEY_LAST_SYNC_LOTES,   now)
+                    .apply();
+        }
 
-        // sync parideras
+        // === PARIDERAS ===
         try {
             ParideraRepository par = new ParideraRepository(dbh);
+            // Log.i(TAG, "Parideras subidas: " + par.pushPendientes(explotacionesAutorizadas));
+            // Log.i(TAG, "Parideras bajadas: " + par.pullDesde(lastParideras, explotacionesAutorizadas));
+
             Log.i(TAG, "Parideras subidas: " + par.pushPendientes());
             Log.i(TAG, "Parideras bajadas: " + par.pullDesde(lastParideras));
         } catch (Exception e) { ok=false; Log.e(TAG, "Error PARIDERAS", e); }
 
-// sync cubriciones
+        // === CUBRICIONES ===
         try {
             CubricionRepository cu = new CubricionRepository(dbh);
+            // Log.i(TAG, "Cubriciones subidas: " + cu.pushPendientes(explotacionesAutorizadas));
+            // Log.i(TAG, "Cubriciones bajadas: " + cu.pullDesde(lastCubriciones, explotacionesAutorizadas));
+
             Log.i(TAG, "Cubriciones subidas: " + cu.pushPendientes());
             Log.i(TAG, "Cubriciones bajadas: " + cu.pullDesde(lastCubriciones));
         } catch (Exception e) { ok=false; Log.e(TAG, "Error CUBRICIONES", e); }
 
-// sync itaca
+        // === ITACA ===
         try {
             ItacaRepository it = new ItacaRepository(dbh);
+            // Log.i(TAG, "Itaca subidas: " + it.pushPendientes(explotacionesAutorizadas));
+            // Log.i(TAG, "Itaca bajadas: " + it.pullDesde(lastItaca, explotacionesAutorizadas));
+
             Log.i(TAG, "Itaca subidas: " + it.pushPendientes());
             Log.i(TAG, "Itaca bajadas: " + it.pullDesde(lastItaca));
         } catch (Exception e) { ok=false; Log.e(TAG, "Error ITACA", e); }
 
-// si todo OK, actualizar cursores:
         if (ok) {
             prefs.edit()
-                    .putString(KEY_LAST_SYNC_PARIDERAS,   nowIso)
-                    .putString(KEY_LAST_SYNC_CUBRICIONES, nowIso)
-                    .putString(KEY_LAST_SYNC_ITACA,       nowIso)
+                    .putString(KEY_LAST_SYNC_PARIDERAS,   now)
+                    .putString(KEY_LAST_SYNC_CUBRICIONES, now)
+                    .putString(KEY_LAST_SYNC_ITACA,       now)
                     .apply();
         }
 
-        //=== CONTAR ===
-
+        // === CONTAR ===
         try {
             ContarRepository contar = new ContarRepository(dbh);
+            // int subidas = contar.pushPendientes(explotacionesAutorizadas);
+            // int bajadas = contar.pullDesde(lastSyncContar, explotacionesAutorizadas);
 
             int subidas = contar.pushPendientes();
             Log.i(TAG, "Contar subidos: " + subidas);
@@ -124,16 +169,17 @@ public class SyncWorker extends Worker {
             Log.e(TAG, "Error sincronizando CONTAR", e);
         }
 
-// si todo OK, al guardar cursores añade:
-        prefs.edit()
-                // ...otros...
-                .putString(KEY_LAST_SYNC_CONTAR, nowIso)
-                .apply();
+        if (ok) {
+            prefs.edit()
+                    .putString(KEY_LAST_SYNC_CONTAR, now)
+                    .apply();
+        }
 
-
-        //=== PESOS ===
+        // === PESOS ===
         try {
             PesoRepository pesos = new PesoRepository(dbh);
+            // int subidasP = pesos.pushPendientes(explotacionesAutorizadas);
+            // int bajadasP = pesos.pullDesde(lastSyncPesos, explotacionesAutorizadas);
 
             int subidasP = pesos.pushPendientes();
             Log.i(TAG, "Pesos subidos: " + subidasP);
@@ -145,16 +191,18 @@ public class SyncWorker extends Worker {
             Log.e(TAG, "Error sincronizando PESOS", e);
         }
 
-// si todo OK, al guardar cursores añade:
-        prefs.edit()
-                // ... otros ...
-                .putString(KEY_LAST_SYNC_PESOS, nowIso)
-                .apply();
+        if (ok) {
+            prefs.edit()
+                    .putString(KEY_LAST_SYNC_PESOS, now)
+                    .apply();
+        }
 
         // === NOTAS ===
-
         try {
             NotaRepository notas = new NotaRepository(dbh);
+            // int subNotas = notas.pushPendientes(explotacionesAutorizadas);
+            // int bajNotas = notas.pullDesde(lastSyncNotas, explotacionesAutorizadas);
+
             int subNotas = notas.pushPendientes();
             Log.i(TAG, "Notas subidas: " + subNotas);
 
@@ -165,16 +213,17 @@ public class SyncWorker extends Worker {
             Log.e(TAG, "Error sincronizando NOTAS", e);
         }
 
-// si todo OK, al guardar cursores añade:
-        prefs.edit()
-                // ... las otras entidades ...
-                .putString(KEY_LAST_SYNC_NOTAS, nowIso)
-                .apply();
-
+        if (ok) {
+            prefs.edit()
+                    .putString(KEY_LAST_SYNC_NOTAS, now)
+                    .apply();
+        }
 
         // === ACCIONES ===
         try {
             AccionRepository acciones = new AccionRepository(dbh);
+            // int subidas = acciones.pushPendientes(explotacionesAutorizadas);
+            // int bajadas = acciones.pullDesde(lastSyncAcciones, explotacionesAutorizadas);
 
             int subidas = acciones.pushPendientes();
             Log.i(TAG, "Acciones subidas: " + subidas);
@@ -189,6 +238,8 @@ public class SyncWorker extends Worker {
         // === SALIDAS ===
         try {
             SalidaRepository salidas = new SalidaRepository(dbh);
+            // int subidas = salidas.pushPendientes(explotacionesAutorizadas);
+            // int bajadas = salidas.pullDesde(lastSyncSalidas, explotacionesAutorizadas);
 
             int subidas = salidas.pushPendientes();
             Log.i(TAG, "Salidas subidas: " + subidas);
@@ -201,23 +252,17 @@ public class SyncWorker extends Worker {
         }
 
         if (ok) {
-            // Solo avanzamos el cursor si todo fue bien
+            // Solo avanzamos cursores si todo fue bien
             prefs.edit()
-                    .putString(KEY_LAST_SYNC_ACCIONES, nowIso)
-                    .putString(KEY_LAST_SYNC_SALIDAS,  nowIso)
+                    .putString(KEY_LAST_SYNC_ACCIONES, now)
+                    .putString(KEY_LAST_SYNC_SALIDAS,  now)
                     .apply();
-            Log.i(TAG, "last_sync_acciones = " + nowIso);
-            Log.i(TAG, "last_sync_salidas  = " + nowIso);
+            Log.i(TAG, "last_sync_acciones = " + now);
+            Log.i(TAG, "last_sync_salidas  = " + now);
             return Result.success();
         } else {
             // Si alguna parte falló, reintentamos y NO movemos la marca de tiempo
             return Result.retry();
         }
-    }
-
-    private String nowIso() {
-        // ISO simple sin zona: 2025-08-21T10:15:30
-        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-                .format(new Date());
     }
 }

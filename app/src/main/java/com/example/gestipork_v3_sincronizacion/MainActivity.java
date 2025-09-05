@@ -16,7 +16,7 @@ import com.example.gestipork_v3_sincronizacion.features.lotes.LoteService;
 import com.example.gestipork_v3_sincronizacion.features.lotes.LoteServiceImpl;
 
 public class MainActivity extends AppCompatActivity {
-
+/*
     private static final String TAG = "GPv3-Test";
     private DBHelper dbh;
     private LoteService loteService;
@@ -170,4 +170,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //ñkdndfdkksdfpsefpbsdkjnksadnfñksnd
+
+ */
 }

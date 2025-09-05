@@ -14,16 +14,16 @@ public class Cubricion extends BaseEntity {
     @SerializedName("nombre_lote")
     private String nombre_lote;   // nombre visual, sustituye a cod_cubricion
 
-    @SerializedName("nMadres")
+    @SerializedName("nmadres")
     private Integer nMadres;
 
-    @SerializedName("nPadres")
+    @SerializedName("npadres")
     private Integer nPadres;
 
-    @SerializedName("fechaInicioCubricion")
+    @SerializedName("fechainiciocubricion")
     private String fechaInicioCubricion;
 
-    @SerializedName("fechaFinCubricion")
+    @SerializedName("fechafincubricion")
     private String fechaFinCubricion;
 
     public Cubricion() {}

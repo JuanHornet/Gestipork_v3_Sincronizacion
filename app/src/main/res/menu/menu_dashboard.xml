@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_add_explotacion"
+        android:title="Añadir explotación"
+        android:icon="@drawable/ic_add"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_edit_explotacion"
+        android:title="Editar Explotación"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_share_explotacion"
+        android:title="Compartir Explotación"
+        app:showAsAction="never" />
+
+
+    <item
+        android:id="@+id/menu_delete_explotacion"
+        android:title="Eliminar Explotación"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_logout"
+        android:title="Cerrar sesión"
+        android:icon="@drawable/ic_logout"
+        app:showAsAction="never" />
+</menu>

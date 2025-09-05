@@ -25,10 +25,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
  *      * Si no hay sesión → "Bearer <API_KEY>" (anon)
  *  - Auto-refresh en 401 usando Supabase Auth (refresh_token)
  *
- * Uso recomendado:
+ * Uso:
  *  - Llama a ApiClient.setAppContext(getApplicationContext()) en tu Application.onCreate().
- *  - Usa ApiClient.get() para servicios REST (PostgREST: /rest/v1/...).
- *  - Usa ApiClient.getAuth() para AuthService (Auth: /auth/v1/...).
+ *  - ApiClient.get()  -> servicios REST (PostgREST: /rest/v1/...).
+ *  - ApiClient.getAuth() -> AuthService (/auth/v1/...).
  */
 public class ApiClient {
 
@@ -49,7 +49,7 @@ public class ApiClient {
         if (client == null) client = buildClient();
         if (retrofit == null) {
             retrofit = new Retrofit.Builder()
-                    .baseUrl(SupabaseConfig.BASE_URL) // Debe apuntar a .../rest/v1/
+                    .baseUrl(SupabaseConfig.BASE_URL) // Debe apuntar a .../rest/v1/ (Retrofit requiere "/" final)
                     .client(client)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
@@ -63,14 +63,14 @@ public class ApiClient {
             String authBase = resolveAuthBaseUrl(SupabaseConfig.BASE_URL);
             authRetrofit = new Retrofit.Builder()
                     .baseUrl(authBase) // raíz del proyecto (terminará en /)
-                    .client(buildAuthClient()) // logging liviano, sin authenticator
+                    .client(buildAuthClient()) // logging + headers apikey/bearer anon
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
         }
         return authRetrofit;
     }
 
-    // ====== OkHttp con interceptores y authenticator ======
+    // ====== OkHttp con interceptores y authenticator (REST) ======
     private static OkHttpClient buildClient() {
         // Interceptor que añade headers y el Bearer adecuado
         Interceptor authInterceptor = chain -> {
@@ -86,7 +86,6 @@ public class ApiClient {
                     bearer = "Bearer " + SupabaseConfig.API_KEY; // anon
                 }
             } else {
-                // Fallback sin contexto (no recordará sesión, usa anon)
                 bearer = "Bearer " + SupabaseConfig.API_KEY;
             }
 
@@ -116,7 +115,6 @@ public class ApiClient {
 
                 try {
                     AuthService auth = getAuth().create(AuthService.class);
-
                     JsonObject body = new JsonObject();
                     body.addProperty("refresh_token", refresh);
 
@@ -158,13 +156,24 @@ public class ApiClient {
                 .build();
     }
 
-    // Cliente simple para Auth (sin authenticator para evitar recursion con /auth/v1/token)
+    // ====== Cliente para Auth (/auth/v1) ======
     private static OkHttpClient buildAuthClient() {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor()
                 .setLevel(HttpLoggingInterceptor.Level.BODY);
 
-        // Para Auth, los headers obligatorios los pone cada request del servicio.
+        // Interceptor: añade apikey + Bearer anon a Auth
+        Interceptor authHeaders = chain -> {
+            Request original = chain.request();
+            Request req = original.newBuilder()
+                    .header("apikey", SupabaseConfig.API_KEY)
+                    .header("Authorization", "Bearer " + SupabaseConfig.API_KEY)
+                    .header("Content-Type", "application/json")
+                    .build();
+            return chain.proceed(req);
+        };
+
         return new OkHttpClient.Builder()
+                .addInterceptor(authHeaders)
                 .addInterceptor(logging)
                 .build();
     }
@@ -172,19 +181,15 @@ public class ApiClient {
     // ====== Utilidades ======
 
     /**
-     * A partir de BASE_URL de PostgREST (…/rest/v1/) calcula la base del proyecto (…/).
-     * Si ya es raíz, la devuelve tal cual.
+     * A partir de BASE_URL de PostgREST (…/rest/v1 o …/rest/v1/) calcula la base del proyecto (…/).
      */
     private static String resolveAuthBaseUrl(String baseUrl) {
-        if (baseUrl == null) return "";
+        if (baseUrl == null || baseUrl.trim().isEmpty()) return "";
         String s = baseUrl.trim();
-        // Normaliza: queremos acabar en "/"
         if (!s.endsWith("/")) s = s + "/";
-        // Si viene como .../rest/v1/ -> recortamos hasta la raíz del proyecto
-        int idx = s.indexOf("/rest/v1/");
-        if (idx > 0) {
-            s = s.substring(0, idx + 1); // incluye la barra final
-        }
+        // Replace si termina en /rest/v1 or /rest/v1/
+        s = s.replaceFirst("/rest/v1/?$", "/");
+        if (!s.endsWith("/")) s = s + "/";
         return s;
     }
 
@@ -195,4 +200,10 @@ public class ApiClient {
         }
         return result;
     }
+    public static void reset() {
+        retrofit = null;
+        authRetrofit = null;
+        client = null;
+    }
+
 }

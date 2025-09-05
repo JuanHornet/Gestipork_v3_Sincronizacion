@@ -1,4 +1,3 @@
-// network/services/AuthService.java
 package com.example.gestipork_v3_sincronizacion.network.services;
 
 import com.google.gson.JsonObject;
@@ -10,23 +9,33 @@ import retrofit2.http.Query;
 
 public interface AuthService {
 
-    // Login: /auth/v1/token?grant_type=password
-    @Headers({
-            "Content-Type: application/json"
-    })
+    @Headers("Content-Type: application/json")
     @POST("auth/v1/token")
     Call<JsonObject> passwordGrant(
             @Query("grant_type") String grantType, // "password"
-            @Body JsonObject body // { "email": "...", "password": "..." }
+            @Body JsonObject body                  // { "email": "...", "password": "..." }
     );
 
-    // Refresh: /auth/v1/token?grant_type=refresh_token
-    @Headers({
-            "Content-Type: application/json"
-    })
+    @Headers("Content-Type: application/json")
     @POST("auth/v1/token")
     Call<JsonObject> refreshToken(
             @Query("grant_type") String grantType, // "refresh_token"
-            @Body JsonObject body // { "refresh_token": "..." }
+            @Body JsonObject body                  // { "refresh_token": "..." }
     );
+
+    // Registro: POST /auth/v1/signup
+    @Headers("Content-Type: application/json")
+    @POST("auth/v1/signup")
+    Call<JsonObject> signUp(@Body JsonObject body); // { "email":"...", "password":"...", "data": {...} }
+
+    // Recuperación: POST /auth/v1/recover?redirect_to=...
+    @Headers("Content-Type: application/json")
+    @POST("auth/v1/recover")
+    Call<Void> recover(
+            @Query("redirect_to") String redirectTo, // puede ser null
+            @Body JsonObject body                    // { "email": "..." }
+    );
+    @POST("auth/v1/resend")
+    Call<Void> resend(@Body JsonObject body);
+
 }

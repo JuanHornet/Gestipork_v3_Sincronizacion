@@ -12,7 +12,7 @@ import com.example.gestipork_v3_sincronizacion.base.IdUtils;
 public class DBHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "gestipork_v3.db";
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 2;
 
     public DBHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -30,6 +30,31 @@ public class DBHelper extends SQLiteOpenHelper {
                     "eliminado INTEGER DEFAULT 0, " +
                     "fecha_eliminado TEXT" +
                     ")";
+
+    private static final String SQL_CREATE_EXPLOTACION_MEMBERS =
+            "CREATE TABLE IF NOT EXISTS explotacion_members (" +
+                    " id TEXT PRIMARY KEY," +
+                    " id_explotacion TEXT NOT NULL," +
+                    " id_usuario TEXT NOT NULL," +
+                    " rol TEXT NOT NULL CHECK (rol IN ('owner','manager','employee','viewer'))," +
+                    " invitado_por TEXT," +
+                    " estado_invitacion TEXT NOT NULL DEFAULT 'accepted' CHECK (estado_invitacion IN ('pending','accepted','revoked'))," +
+                    " fecha_actualizacion TEXT NOT NULL," +
+                    " sincronizado INTEGER NOT NULL DEFAULT 0" +
+                    ");";
+
+    private static final String SQL_IDX_EXPMEM_UNIQUE =
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_explomem_explot_usu " +
+                    "ON explotacion_members(id_explotacion, id_usuario);";
+
+    private static final String SQL_IDX_EXPMEM_USUARIO =
+            "CREATE INDEX IF NOT EXISTS idx_explomem_usuario " +
+                    "ON explotacion_members(id_usuario);";
+
+    private static final String SQL_IDX_EXPMEM_EXPLOT =
+            "CREATE INDEX IF NOT EXISTS idx_explomem_explot " +
+                    "ON explotacion_members(id_explotacion);";
+
 
     private static final String CREATE_TABLE_EXPLOTACIONES =
             "CREATE TABLE explotaciones (" +
@@ -342,6 +367,11 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_INDEX_CONTAR_LOTE);
         db.execSQL(CREATE_INDEX_CONTAR_EXPLOTACION);
         db.execSQL(CREATE_INDEX_CONTAR_FECHA);
+
+        db.execSQL(SQL_CREATE_EXPLOTACION_MEMBERS);
+        db.execSQL(SQL_IDX_EXPMEM_UNIQUE);
+        db.execSQL(SQL_IDX_EXPMEM_USUARIO);
+        db.execSQL(SQL_IDX_EXPMEM_EXPLOT);
     }
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -362,6 +392,8 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS lotes");
         db.execSQL("DROP TABLE IF EXISTS explotaciones");
         db.execSQL("DROP TABLE IF EXISTS usuarios");
+
+        db.execSQL("DROP TABLE IF EXISTS explotacion_members");
 
         onCreate(db);
     }
@@ -458,6 +490,16 @@ public class DBHelper extends SQLiteOpenHelper {
             throw e;
         } finally {
             db.endTransaction();
+        }
+    }
+    @Override
+    public void onConfigure(SQLiteDatabase db) {
+        super.onConfigure(db);
+        db.setForeignKeyConstraintsEnabled(true);
+    }
+    public static void ensureCreated(Context ctx) {
+        try (SQLiteDatabase db = new DBHelper(ctx).getWritableDatabase()) {
+            android.util.Log.i("DBHelper", "DB path: " + ctx.getDatabasePath(DB_NAME).getAbsolutePath());
         }
     }
 

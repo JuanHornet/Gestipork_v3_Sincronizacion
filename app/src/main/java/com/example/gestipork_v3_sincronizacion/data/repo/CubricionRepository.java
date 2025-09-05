@@ -7,11 +7,13 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.example.gestipork_v3_sincronizacion.data.db.DBHelper;
 import com.example.gestipork_v3_sincronizacion.data.models.Cubricion;
+import com.example.gestipork_v3_sincronizacion.base.*;
 import com.example.gestipork_v3_sincronizacion.network.ApiClient;
 import com.example.gestipork_v3_sincronizacion.network.services.GenericSupabaseService;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import retrofit2.Response;
 
@@ -195,6 +197,24 @@ public class CubricionRepository {
         cu.setSincronizado(1);
         return cu;
     }
+
+    /** Actualiza una cubrición en SQLite, marca sincronizado=0 y refresca fecha_actualizacion. */
+    public int update(Cubricion cu) {
+        SQLiteDatabase db = dbh.getWritableDatabase();
+        ContentValues v = new ContentValues();
+        v.put("id_lote", cu.getId_lote());
+        v.put("id_explotacion", cu.getId_explotacion());
+        v.put("nombre_lote", cu.getNombre_lote());
+        v.put("nMadres", cu.getnMadres());
+        v.put("nPadres", cu.getnPadres());
+        v.put("fechaInicioCubricion", cu.getFechaInicioCubricion());
+        v.put("fechaFinCubricion", cu.getFechaFinCubricion());
+        v.put("fecha_actualizacion", FechaUtils.ahoraIso());
+        v.put("sincronizado", 0);
+        return db.update("cubriciones", v, "id=?", new String[]{ cu.getId() });
+    }
+
+
 
     private String getS(JsonObject o, String k){ return o.has(k)&&!o.get(k).isJsonNull()?o.get(k).getAsString():null; }
     private int getI(JsonObject o, String k){ return o.has(k)&&!o.get(k).isJsonNull()?o.get(k).getAsInt():0; }

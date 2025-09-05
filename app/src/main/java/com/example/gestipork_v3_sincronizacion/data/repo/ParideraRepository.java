@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.example.gestipork_v3_sincronizacion.base.FechaUtils;
 import com.example.gestipork_v3_sincronizacion.data.db.DBHelper;
 import com.example.gestipork_v3_sincronizacion.data.models.Paridera;
 import com.example.gestipork_v3_sincronizacion.network.ApiClient;
@@ -12,6 +13,7 @@ import com.example.gestipork_v3_sincronizacion.network.services.GenericSupabaseS
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import retrofit2.Response;
@@ -201,6 +203,26 @@ public class ParideraRepository {
         p.setSincronizado(1);
         return p;
     }
+
+    /** Actualiza una paridera en SQLite, marca sincronizado=0 y refresca fecha_actualizacion. */
+    public int update(Paridera p) {
+        SQLiteDatabase db = dbh.getWritableDatabase();
+        ContentValues v = new ContentValues();
+        v.put("id_lote", p.getId_lote());
+        v.put("id_explotacion", p.getId_explotacion());
+        v.put("nombre_lote", p.getNombre_lote());
+        v.put("nMadres", p.getnMadres());
+        v.put("nPadres", p.getnPadres());
+        v.put("fechaInicio", p.getFechaInicio());
+        v.put("fechaFin", p.getFechaFin());
+        v.put("fecha_actualizacion", FechaUtils.ahoraIso());
+        v.put("sincronizado", 0);
+        // no tocamos eliminado/fecha_eliminado aquí
+        return db.update("parideras", v, "id=?", new String[]{ p.getId() });
+    }
+
+
+
 
     private String getS(JsonObject o, String k){ return o.has(k)&&!o.get(k).isJsonNull()?o.get(k).getAsString():null; }
     private int getI(JsonObject o, String k){ return o.has(k)&&!o.get(k).isJsonNull()?o.get(k).getAsInt():0; }
