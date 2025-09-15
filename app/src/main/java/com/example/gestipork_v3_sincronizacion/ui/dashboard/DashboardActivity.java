@@ -39,6 +39,7 @@ import com.example.gestipork_v3_sincronizacion.data.repo.ExplotacionMembersRepos
 import com.example.gestipork_v3_sincronizacion.network.ApiClient;
 import com.example.gestipork_v3_sincronizacion.sync.workers.SyncWorker;
 import com.example.gestipork_v3_sincronizacion.ui.explotaciones.InviteMemberDialogFragment;
+import com.example.gestipork_v3_sincronizacion.ui.explotaciones.MembersActivity;
 import com.example.gestipork_v3_sincronizacion.ui.explotaciones.RoleInfoDialogFragment;
 import com.example.gestipork_v3_sincronizacion.ui.login.LoginActivity;
 
@@ -455,6 +456,22 @@ public class DashboardActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
+
+        // En DashboardActivity.onOptionsItemSelected(...)
+        if (itemId == R.id.action_manage_members) {
+            String idExplot = getExplotacionSeleccionadaId();
+            String nombre   = getExplotacionSeleccionadaNombre();
+            if (TextUtils.isEmpty(idExplot)) {
+                Toast.makeText(this, "Selecciona una explotación", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+            Intent i = new Intent(this, com.example.gestipork_v3_sincronizacion.ui.explotaciones.MembersActivity.class);
+            i.putExtra(MembersActivity.EXTRA_ID_EXPLOT, idExplot);
+            i.putExtra(MembersActivity.EXTRA_NOMBRE, nombre);
+            startActivity(i);
+            return true;
+        }
+
 
         if (itemId == R.id.menu_logout) {
             doLogout();

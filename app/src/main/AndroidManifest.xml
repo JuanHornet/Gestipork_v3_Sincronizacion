@@ -39,6 +39,13 @@
                 <data android:scheme="gestipork" android:host="auth"/>
             </intent-filter>
         </activity>
+
+        <activity
+            android:name="com.example.gestipork_v3_sincronizacion.ui.explotaciones.MembersActivity"
+            android:exported="false"
+            android:label="Miembros"
+            android:parentActivityName="com.example.gestipork_v3_sincronizacion.ui.dashboard.DashboardActivity" />
+
         <activity
             android:name=".ui.login.PostRegisterActivity"
             android:exported="false"

@@ -1,0 +1,5 @@
+<!-- res/menu/menu_member_row.xml -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/action_edit_role" android:title="Editar rol"/>
+    <item android:id="@+id/action_revoke"    android:title="Revocar acceso"/>
+</menu>

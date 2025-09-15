@@ -18,6 +18,11 @@
         android:title="Compartir Explotación"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/action_manage_members"
+        android:title="Gestionar miembros"
+        app:showAsAction="never" />
+
 
     <item
         android:id="@+id/menu_delete_explotacion"
