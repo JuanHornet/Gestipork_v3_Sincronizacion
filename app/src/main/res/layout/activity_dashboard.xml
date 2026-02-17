@@ -8,7 +8,7 @@
     android:layout_height="match_parent"
     tools:context=".ui.dashboard.DashboardActivity">
 
-    <!-- Toolbar superior -->
+    <!-- Toolbar superior reutilizada -->
     <include
         layout="@layout/toolbar_estandar"
         android:layout_width="match_parent"
@@ -28,32 +28,34 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:spinnerMode="dropdown" />
+
         <!-- Texto de aviso si no hay explotaciones -->
         <TextView
             android:id="@+id/txtVacio"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="No hay explotaciones.\nPulsa en el icono de los tres puntos (⋮) y selecciona Añadir Explotación"
-        android:textSize="16sp"
-        android:textColor="@android:color/darker_gray"
-        android:gravity="center"
-        android:visibility="gone"
-        android:padding="16dp"/>
+            android:textSize="16sp"
+            android:textColor="@android:color/darker_gray"
+            android:gravity="center"
+            android:visibility="gone"
+            android:padding="16dp"/>
 
-
-        <!-- RecyclerView para mostrar los resúmenes -->
+        <!-- SOLO este Recycler con tu card de item_dashboard_activity -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_resumen"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:paddingTop="16dp" />
+
+        <!-- Botón Sincronizar -->
         <Button
-            android:id="@+id/btnSincronizar"
+            android:id="@+id/btnSync"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Sincronizar ahora" />
 
-
     </LinearLayout>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

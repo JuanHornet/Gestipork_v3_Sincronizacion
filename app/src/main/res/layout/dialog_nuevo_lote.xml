@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Nombre del lote -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nombre del lote"
+        android:textSize="14sp" />
+
+    <EditText
+        android:id="@+id/edtNombreLote"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Ej: Lote 1/26"
+        android:inputType="textCapSentences"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Raza -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Raza"
+        android:textSize="14sp" />
+
+    <Spinner
+        android:id="@+id/spinnerRaza"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp" />
+
+</LinearLayout>

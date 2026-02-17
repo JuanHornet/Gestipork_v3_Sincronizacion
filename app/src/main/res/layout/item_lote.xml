@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/card_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginVertical="6dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    android:foreground="?attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="14dp">
+
+        <!-- Círculo de color -->
+        <View
+            android:id="@+id/view_color"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/circle_background" />
+
+        <!-- Columna izquierda: nombre + dcer + raza -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_weight="1">
+
+            <!-- Nombre del lote -->
+            <TextView
+                android:id="@+id/txt_id_lote"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Lote 1"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"/>
+
+            <!-- dcer (ITACA) -->
+            <TextView
+                android:id="@+id/txt_cod_itaca"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="D-12345"
+                android:textSize="14sp"
+                android:textColor="@android:color/darker_gray"
+                android:layout_marginTop="2dp"/>
+
+            <!-- Raza -->
+            <TextView
+                android:id="@+id/txt_raza"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ibérico"
+                android:textSize="14sp"
+                android:textColor="@android:color/darker_gray"
+                android:layout_marginTop="2dp"/>
+        </LinearLayout>
+
+        <!-- Animales disponibles -->
+        <TextView
+            android:id="@+id/txt_n_disponibles"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="80"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:textColor="@color/principal"
+            android:layout_marginStart="8dp"/>
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

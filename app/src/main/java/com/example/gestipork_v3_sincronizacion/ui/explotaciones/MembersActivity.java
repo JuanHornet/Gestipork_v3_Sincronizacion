@@ -1,12 +1,11 @@
 // ui/explotaciones/MembersActivity.java
 package com.example.gestipork_v3_sincronizacion.ui.explotaciones;
 
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
@@ -25,16 +24,17 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.example.gestipork_v3_sincronizacion.R;
 import com.example.gestipork_v3_sincronizacion.auth.SessionManager;
 import com.example.gestipork_v3_sincronizacion.base.FechaUtils;
+import com.example.gestipork_v3_sincronizacion.base.Permisos;
 import com.example.gestipork_v3_sincronizacion.data.db.DBHelper;
 import com.example.gestipork_v3_sincronizacion.data.models.ExplotacionMember;
 import com.example.gestipork_v3_sincronizacion.data.models.MemberRow;
+import com.example.gestipork_v3_sincronizacion.data.repo.ExplotacionMembersRepository;
 import com.example.gestipork_v3_sincronizacion.network.ApiClient;
 import com.example.gestipork_v3_sincronizacion.network.services.ExplotacionMembersService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -54,11 +54,13 @@ public class MembersActivity extends AppCompatActivity {
     private String idExplot;
     private String nombreExplot;
     private String currentUserId;
+    private String currentRole;
 
     private MembersAdapter adapter;
     private ExplotacionMembersService api;
     private DBHelper db;
 
+    // Desambiguación del embed con el nombre REAL del FK hacia usuarios
     private static final String SELECT_JOIN =
             "id,id_explotacion,id_usuario,rol,estado_invitacion,fecha_actualizacion," +
                     "usuario:usuarios!fk_members_usuario(id,email,nombre)";
@@ -68,20 +70,20 @@ public class MembersActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_members);
 
-        idExplot    = getIntent().getStringExtra(EXTRA_ID_EXPLOT);
-        nombreExplot= getIntent().getStringExtra(EXTRA_NOMBRE);
+        idExplot      = getIntent().getStringExtra(EXTRA_ID_EXPLOT);
+        nombreExplot  = getIntent().getStringExtra(EXTRA_NOMBRE);
         currentUserId = new SessionManager(this).getUserId();
 
         toolbar = findViewById(R.id.toolbar_estandar);
         setSupportActionBar(toolbar);
-        if (getSupportActionBar()!=null) {
+        if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("Miembros" + (TextUtils.isEmpty(nombreExplot) ? "" : (" · " + nombreExplot)));
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
         toolbar.setNavigationOnClickListener(v -> finish());
 
-        swipe = findViewById(R.id.swipe);
-        rv = findViewById(R.id.recycler);
+        swipe    = findViewById(R.id.swipe);
+        rv       = findViewById(R.id.recycler);
         progress = findViewById(R.id.progress);
 
         rv.setLayoutManager(new LinearLayoutManager(this));
@@ -92,7 +94,19 @@ public class MembersActivity extends AppCompatActivity {
         api = ApiClient.get().create(ExplotacionMembersService.class);
         db  = new DBHelper(this);
 
-        findViewById(R.id.fabInvite).setOnClickListener(v -> {
+        // Rol actual del usuario en esta explotación
+        ExplotacionMembersRepository membersRepo = new ExplotacionMembersRepository(db);
+        currentRole = membersRepo.rolDe(currentUserId, idExplot);
+        final boolean canManage = Permisos.puede("GESTION_MIEMBROS", currentRole);
+
+        // FAB invitar solo para owner/manager
+        View fab = findViewById(R.id.fabInvite);
+        fab.setVisibility(canManage ? View.VISIBLE : View.GONE);
+        fab.setOnClickListener(v -> {
+            if (!Permisos.puede("GESTION_MIEMBROS", currentRole)) {
+                Toast.makeText(this, "No tienes permisos para invitar", Toast.LENGTH_SHORT).show();
+                return;
+            }
             InviteMemberDialogFragment
                     .newInstance(idExplot, nombreExplot)
                     .show(getSupportFragmentManager(), "invitar");
@@ -114,7 +128,7 @@ public class MembersActivity extends AppCompatActivity {
             return;
         }
         progress.setVisibility(View.VISIBLE);
-        // Filtramos los revocados para no mostrarlos
+
         api.listarJoinUsuarios("eq."+idExplot, "neq.revoked", SELECT_JOIN, "rol.asc")
                 .enqueue(new Callback<List<MemberRow>>() {
                     @Override public void onResponse(Call<List<MemberRow>> call, Response<List<MemberRow>> res) {
@@ -122,8 +136,7 @@ public class MembersActivity extends AppCompatActivity {
                         swipe.setRefreshing(false);
                         if (res.isSuccessful() && res.body()!=null) {
                             adapter.setData(res.body());
-                            // guarda (opcional) en SQLite del owner para offline rápido
-                            saveLocal(res.body());
+                            saveLocal(res.body()); // opcional: cache local
                         } else {
                             Toast.makeText(MembersActivity.this, "No se pudo cargar ("+res.code()+")", Toast.LENGTH_SHORT).show();
                         }
@@ -134,13 +147,11 @@ public class MembersActivity extends AppCompatActivity {
                         Toast.makeText(MembersActivity.this, "Fallo de red", Toast.LENGTH_SHORT).show();
                     }
                 });
-
     }
 
     private void saveLocal(List<MemberRow> members) {
         try {
             android.database.sqlite.SQLiteDatabase wdb = db.getWritableDatabase();
-            // estrategia simple: upsert fila a fila
             for (MemberRow m : members) {
                 android.content.ContentValues v = new android.content.ContentValues();
                 String id = m.getId()!=null ? m.getId() : java.util.UUID.randomUUID().toString();
@@ -157,7 +168,7 @@ public class MembersActivity extends AppCompatActivity {
         } catch (Exception ignored) {}
     }
 
-    // ===== Adapter =====
+    // ========================= Adapter =========================
     private class MembersAdapter extends RecyclerView.Adapter<MemberVH> {
         private final List<MemberRow> data = new ArrayList<>();
 
@@ -167,12 +178,14 @@ public class MembersActivity extends AppCompatActivity {
             notifyDataSetChanged();
         }
 
-        @NonNull @Override public MemberVH onCreateViewHolder(@NonNull android.view.ViewGroup parent, int viewType) {
+        @NonNull @Override
+        public MemberVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View v = getLayoutInflater().inflate(R.layout.item_member, parent, false);
             return new MemberVH(v);
         }
 
-        @Override public void onBindViewHolder(@NonNull MemberVH h, int pos) {
+        @Override
+        public void onBindViewHolder(@NonNull MemberVH h, int pos) {
             MemberRow m = data.get(pos);
             String nombre = (m.getUsuario()!=null && !TextUtils.isEmpty(m.getUsuario().nombre))
                     ? m.getUsuario().nombre : "(Sin nombre)";
@@ -183,35 +196,42 @@ public class MembersActivity extends AppCompatActivity {
             h.txtEmail.setText(email);
             h.txtRol.setText(m.getRol());
 
-            // Deshabilitar acciones contra owners (según reglas)
-            boolean soyYo = !TextUtils.isEmpty(currentUserId) && currentUserId.equals(m.getIdUsuario());
-            h.btnMenu.setOnClickListener(v -> showRowMenu(v, m, soyYo));
+            final boolean soyYo = !TextUtils.isEmpty(currentUserId) && currentUserId.equals(m.getIdUsuario());
+            final boolean canManage = Permisos.puede("GESTION_MIEMBROS", currentRole);
+
+            h.btnMenu.setOnClickListener(v -> {
+                PopupMenu pm = new PopupMenu(MembersActivity.this, v);
+                pm.getMenuInflater().inflate(R.menu.menu_member_row, pm.getMenu());
+
+                // Bloqueos UI:
+                // - No tocar owners desde aquí
+                // - No puedo editar/revocar mi propio perfil
+                // - Si no tengo permisos de gestión, todo deshabilitado
+                boolean esOwner = "owner".equalsIgnoreCase(m.getRol());
+                if (esOwner || soyYo || !canManage) {
+                    pm.getMenu().findItem(R.id.action_edit_role).setEnabled(false);
+                    pm.getMenu().findItem(R.id.action_revoke).setEnabled(false);
+                }
+
+                pm.setOnMenuItemClickListener(item -> {
+                    int id = item.getItemId();
+                    if (id == R.id.action_edit_role) {
+                        showEditRoleDialog(m);
+                        return true;
+                    } else if (id == R.id.action_revoke) {
+                        confirmRevoke(m);
+                        return true;
+                    }
+                    return false;
+                });
+                pm.show();
+            });
+
+            // (Opcional) abrir menú con long-press
+            h.itemView.setOnLongClickListener(v -> { h.btnMenu.performClick(); return true; });
         }
 
         @Override public int getItemCount() { return data.size(); }
-
-        private void showRowMenu(View anchor, MemberRow m, boolean soyYo) {
-            PopupMenu pm = new PopupMenu(MembersActivity.this, anchor);
-            pm.getMenuInflater().inflate(R.menu.menu_member_row, pm.getMenu());
-            // reglas: no permitir tocar a owners desde aquí (transferencia aparte)
-            if ("owner".equalsIgnoreCase(m.getRol())) {
-                pm.getMenu().findItem(R.id.action_edit_role).setEnabled(false);
-                pm.getMenu().findItem(R.id.action_revoke).setEnabled(false);
-            }
-            // opcional: no permitir que el usuario se auto-revoque si es el único owner
-            pm.setOnMenuItemClickListener(item -> {
-                int id = item.getItemId();
-                if (id == R.id.action_edit_role) {
-                    showEditRoleDialog(m);
-                    return true;
-                } else if (id == R.id.action_revoke) {
-                    confirmRevoke(m);
-                    return true;
-                }
-                return false;
-            });
-            pm.show();
-        }
     }
 
     private static class MemberVH extends RecyclerView.ViewHolder {
@@ -226,7 +246,22 @@ public class MembersActivity extends AppCompatActivity {
         }
     }
 
+    // ==================== Acciones ====================
     private void showEditRoleDialog(MemberRow m) {
+        // Defensa: no editar mi propia fila y solo owner/manager gestionan
+        if (!Permisos.puede("GESTION_MIEMBROS", currentRole)) {
+            Toast.makeText(this, "No tienes permisos para gestionar miembros", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (!TextUtils.isEmpty(currentUserId) && currentUserId.equals(m.getIdUsuario())) {
+            Toast.makeText(this, "No puedes editar tu propio rol.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if ("owner".equalsIgnoreCase(m.getRol())) {
+            Toast.makeText(this, "No puedes cambiar el rol de un propietario.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         final String[] roles = new String[]{"manager","employee","viewer"};
         int pre = 2;
         for (int i=0;i<roles.length;i++) if (roles[i].equalsIgnoreCase(m.getRol())) { pre = i; break; }
@@ -246,6 +281,20 @@ public class MembersActivity extends AppCompatActivity {
     }
 
     private void confirmRevoke(MemberRow m) {
+        // Defensa: no revocar mi propio acceso y solo owner/manager gestionan
+        if (!Permisos.puede("GESTION_MIEMBROS", currentRole)) {
+            Toast.makeText(this, "No tienes permisos para gestionar miembros", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (!TextUtils.isEmpty(currentUserId) && currentUserId.equals(m.getIdUsuario())) {
+            Toast.makeText(this, "No puedes revocar tu propio acceso.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if ("owner".equalsIgnoreCase(m.getRol())) {
+            Toast.makeText(this, "No puedes revocar a un propietario.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         new AlertDialog.Builder(this)
                 .setTitle("Revocar acceso")
                 .setMessage("¿Quitar acceso a " + (m.getUsuario()!=null ? m.getUsuario().email : m.getIdUsuario()) + "?")
@@ -255,8 +304,22 @@ public class MembersActivity extends AppCompatActivity {
     }
 
     private void patchMember(MemberRow m, String nuevoRol, String nuevoEstado) {
+        // Defensa adicional (por si llega aquí por UI antigua)
+        if (!Permisos.puede("GESTION_MIEMBROS", currentRole)) {
+            Toast.makeText(this, "No tienes permisos para gestionar miembros", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (!TextUtils.isEmpty(currentUserId) && currentUserId.equals(m.getIdUsuario())) {
+            Toast.makeText(this, "Acción no permitida sobre tu propio perfil.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if ("owner".equalsIgnoreCase(m.getRol())) {
+            Toast.makeText(this, "Acción no permitida sobre un propietario.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         Map<String, Object> cambios = new HashMap<>();
-        if (nuevoRol != null) cambios.put("rol", nuevoRol);
+        if (nuevoRol != null)    cambios.put("rol", nuevoRol);
         if (nuevoEstado != null) cambios.put("estado_invitacion", nuevoEstado);
         cambios.put("fecha_actualizacion", FechaUtils.ahoraIso());
 
@@ -265,22 +328,26 @@ public class MembersActivity extends AppCompatActivity {
                 .enqueue(new Callback<List<ExplotacionMember>>() {
                     @Override public void onResponse(Call<List<ExplotacionMember>> call, Response<List<ExplotacionMember>> res) {
                         if (res.isSuccessful()) {
-                            if (nuevoRol != null)  m.setRol(nuevoRol);
+                            if (nuevoRol != null)    m.setRol(nuevoRol);
                             if (nuevoEstado != null) m.setEstadoInvitacion(nuevoEstado);
                             m.setFechaActualizacion(FechaUtils.ahoraIso());
+
                             // Actualiza local
                             try {
                                 android.database.sqlite.SQLiteDatabase wdb = db.getWritableDatabase();
                                 android.content.ContentValues v = new android.content.ContentValues();
-                                if (nuevoRol != null) v.put("rol", nuevoRol);
-                                if (nuevoEstado != null) v.put("estado_invitacion", nuevoEstado);
+                                if (nuevoRol != null)        v.put("rol", nuevoRol);
+                                if (nuevoEstado != null)     v.put("estado_invitacion", nuevoEstado);
                                 v.put("fecha_actualizacion", m.getFechaActualizacion());
                                 v.put("sincronizado", 1);
                                 wdb.update("explotacion_members", v, "id=?", new String[]{ m.getId() });
                             } catch (Exception ignored) {}
-                            // refrescar
-                            loadMembers();
+
+                            loadMembers(); // refresca lista
                         } else {
+                            String err = null;
+                            try { if (res.errorBody()!=null) err = res.errorBody().string(); } catch (Exception ignored) {}
+                            android.util.Log.e("MEMBERS_PATCH", "HTTP "+res.code()+" "+err);
                             Toast.makeText(MembersActivity.this, "Error ("+res.code()+")", Toast.LENGTH_SHORT).show();
                         }
                     }

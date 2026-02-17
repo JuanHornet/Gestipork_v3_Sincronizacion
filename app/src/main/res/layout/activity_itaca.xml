@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include
+        android:id="@+id/toolbar_estandar"
+        layout="@layout/toolbar_estandar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Cabecera -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Datos ITACA"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:paddingBottom="12dp"/>
+
+            <!-- DCER -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="DCER"
+                android:textStyle="bold"/>
+            <TextView
+                android:id="@+id/txtDcer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="-" />
+
+            <!-- Color -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Color"
+                android:paddingTop="12dp"
+                android:textStyle="bold"/>
+            <TextView
+                android:id="@+id/txtColor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="-" />
+
+            <!-- Raza -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Raza"
+                android:paddingTop="12dp"
+                android:textStyle="bold"/>
+            <TextView
+                android:id="@+id/txtRaza"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="-" />
+
+            <!-- Animales / Madres / Padres -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Nº Animales"
+                android:paddingTop="12dp"
+                android:textStyle="bold"/>
+            <TextView
+                android:id="@+id/txtAnimales"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="0" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Nº Madres"
+                android:paddingTop="12dp"
+                android:textStyle="bold"/>
+            <TextView
+                android:id="@+id/txtMadres"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="0" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Nº Padres"
+                android:paddingTop="12dp"
+                android:textStyle="bold"/>
+            <TextView
+                android:id="@+id/txtPadres"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="0" />
+
+            <!-- Fechas -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Fecha primer nacimiento"
+                android:paddingTop="12dp"
+                android:textStyle="bold"/>
+            <TextView
+                android:id="@+id/txtFechaPrimNac"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="-" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Fecha último nacimiento"
+                android:paddingTop="12dp"
+                android:textStyle="bold"/>
+            <TextView
+                android:id="@+id/txtFechaUltNac"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="-" />
+
+            <!-- Crotales -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Crotales solicitados"
+                android:paddingTop="12dp"
+                android:textStyle="bold"/>
+            <TextView
+                android:id="@+id/txtCrotales"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="-" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

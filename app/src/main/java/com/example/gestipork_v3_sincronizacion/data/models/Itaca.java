@@ -23,10 +23,10 @@ public class Itaca extends BaseEntity {
     @SerializedName("nPadres")
     private Integer nPadres;
 
-    @SerializedName("fechaPrimerNacimiento")
+    @SerializedName("fechaprimernacimiento")
     private String fechaPrimerNacimiento;
 
-    @SerializedName("fechaUltimoNacimiento")
+    @SerializedName("fechaultimonacimiento")
     private String fechaUltimoNacimiento;
 
     @SerializedName("raza")

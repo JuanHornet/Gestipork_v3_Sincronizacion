@@ -311,6 +311,34 @@ public class DBHelper extends SQLiteOpenHelper {
     private static final String CREATE_INDEX_CONTAR_FECHA =
             "CREATE INDEX idx_contar_fecha ON contar(fecha)";
 
+
+    // ALIMENTACIÓN
+    private static final String CREATE_TABLE_ALIMENTACION =
+            "CREATE TABLE alimentacion (" +
+                    "id TEXT PRIMARY KEY, " +
+                    "id_lote TEXT, " +
+                    "id_explotacion TEXT, " +
+                    "tipo_alimentacion TEXT NOT NULL, " +      // Bellota / Cebo Campo / Cebo
+                    "n_animales INTEGER NOT NULL DEFAULT 0, " +
+                    "fecha_inicio TEXT, " +                     // ISO (opcional)
+                    "fecha_actualizacion TEXT, " +
+                    "sincronizado INTEGER DEFAULT 0, " +
+                    "eliminado INTEGER DEFAULT 0, " +
+                    "fecha_eliminado TEXT, " +
+                    "FOREIGN KEY(id_lote) REFERENCES lotes(id), " +
+                    "FOREIGN KEY(id_explotacion) REFERENCES explotaciones(id)" +
+                    ")";
+
+    private static final String CREATE_INDEX_ALIM_LOTE =
+            "CREATE INDEX idx_alimentacion_lote ON alimentacion(id_lote)";
+
+    private static final String CREATE_INDEX_ALIM_EXPLOT =
+            "CREATE INDEX idx_alimentacion_explot ON alimentacion(id_explotacion)";
+
+    private static final String CREATE_INDEX_ALIM_TIPO =
+            "CREATE INDEX idx_alimentacion_tipo ON alimentacion(tipo_alimentacion)";
+
+
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_TABLE_USUARIOS);
@@ -368,6 +396,12 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_INDEX_CONTAR_EXPLOTACION);
         db.execSQL(CREATE_INDEX_CONTAR_FECHA);
 
+        // ALIMENTACIÓN
+        db.execSQL(CREATE_TABLE_ALIMENTACION);
+        db.execSQL(CREATE_INDEX_ALIM_LOTE);
+        db.execSQL(CREATE_INDEX_ALIM_EXPLOT);
+        db.execSQL(CREATE_INDEX_ALIM_TIPO);
+
         db.execSQL(SQL_CREATE_EXPLOTACION_MEMBERS);
         db.execSQL(SQL_IDX_EXPMEM_UNIQUE);
         db.execSQL(SQL_IDX_EXPMEM_USUARIO);
@@ -376,6 +410,7 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // 1:N
+        db.execSQL("DROP TABLE IF EXISTS alimentacion");
         db.execSQL("DROP TABLE IF EXISTS contar");
         db.execSQL("DROP TABLE IF EXISTS pesos");
         db.execSQL("DROP TABLE IF EXISTS notas");
@@ -398,39 +433,36 @@ public class DBHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    /**
-     * Crea un Lote y, automáticamente, sus registros 1:1 en Parideras, Cubriciones e Itaca.
-     * Todo en una sola transacción. Devuelve el id (UUID) del lote creado.
-     */
     public String crearLoteConHijos(String idExplotacion,
                                     String nombreLote,
-                                    String raza,
-                                    String color,
-                                    int estado,
-                                    int nIniciales) {
+                                    String raza) {
 
         String now = FechaUtils.ahoraIso();
 
-        String idLote = IdUtils.uuid();
-        String idParidera = IdUtils.uuid();
+        String idLote      = IdUtils.uuid();
+        String idParidera  = IdUtils.uuid();
         String idCubricion = IdUtils.uuid();
-        String idItaca = IdUtils.uuid();
+        String idItaca     = IdUtils.uuid();
+
+        int nIniciales = 0;
+        int nDisponibles = 0;
 
         SQLiteDatabase db = getWritableDatabase();
         db.beginTransaction();
         try {
+
             // LOTE
             ContentValues vLote = new ContentValues();
             vLote.put("id", idLote);
             vLote.put("id_explotacion", idExplotacion);
-            vLote.put("nDisponibles", nIniciales);
-            vLote.put("nIniciales", nIniciales);
+            vLote.put("nDisponibles", 0);
+            vLote.put("nIniciales", 0);
             vLote.put("nombre_lote", nombreLote);
             vLote.put("raza", raza);
-            vLote.put("estado", estado);
+            vLote.put("estado", 1);
+            vLote.put("color", (String) null);
             vLote.put("sincronizado", 0);
             vLote.put("fecha_actualizacion", now);
-            vLote.put("color", color);
             vLote.put("eliminado", 0);
             db.insertOrThrow("lotes", null, vLote);
 
@@ -449,7 +481,7 @@ public class DBHelper extends SQLiteOpenHelper {
             vPar.put("eliminado", 0);
             db.insertOrThrow("parideras", null, vPar);
 
-            // CUBRICION
+            // CUBRICIÓN
             ContentValues vCub = new ContentValues();
             vCub.put("id", idCubricion);
             vCub.put("id_lote", idLote);
@@ -477,21 +509,48 @@ public class DBHelper extends SQLiteOpenHelper {
             vIta.put("fechaUltimoNacimiento", (String) null);
             vIta.put("raza", raza);
             vIta.put("dcer", "");
-            vIta.put("color", color);
+            vIta.put("color", (String) null);
             vIta.put("crotalesSolicitados", 0);
             vIta.put("fecha_actualizacion", now);
             vIta.put("sincronizado", 0);
             vIta.put("eliminado", 0);
             db.insertOrThrow("itaca", null, vIta);
 
+            // ALIMENTACIÓN (TODOS A CERO)
+            insertarAlimentacion(db, idLote, idExplotacion, "Bellota", 0, now);
+            insertarAlimentacion(db, idLote, idExplotacion, "Cebo Campo", 0, now);
+            insertarAlimentacion(db, idLote, idExplotacion, "Cebo", 0, now);
+
             db.setTransactionSuccessful();
             return idLote;
-        } catch (SQLiteConstraintException e) {
-            throw e;
+
         } finally {
             db.endTransaction();
         }
     }
+
+    private void insertarAlimentacion(SQLiteDatabase db,
+                                      String idLote,
+                                      String idExplotacion,
+                                      String tipo,
+                                      int nAnimales,
+                                      String now) {
+
+        ContentValues v = new ContentValues();
+        v.put("id", IdUtils.uuid());
+        v.put("id_lote", idLote);
+        v.put("id_explotacion", idExplotacion);
+        v.put("tipo_alimentacion", tipo);
+        v.put("n_animales", nAnimales);
+        v.put("fecha_inicio", (String) null);
+        v.put("fecha_actualizacion", now);
+        v.put("sincronizado", 0);
+        v.put("eliminado", 0);
+        db.insertOrThrow("alimentacion", null, v);
+    }
+
+
+
     @Override
     public void onConfigure(SQLiteDatabase db) {
         super.onConfigure(db);

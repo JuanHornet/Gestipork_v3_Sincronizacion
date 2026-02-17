@@ -1,6 +1,6 @@
-// Cubricion.java
 package com.example.gestipork_v3_sincronizacion.data.models;
 
+import com.example.gestipork_v3_sincronizacion.data.models.BaseEntity;
 import com.google.gson.annotations.SerializedName;
 
 public class Cubricion extends BaseEntity {
@@ -12,40 +12,86 @@ public class Cubricion extends BaseEntity {
     private String id_explotacion;
 
     @SerializedName("nombre_lote")
-    private String nombre_lote;   // nombre visual, sustituye a cod_cubricion
+    private String nombre_lote;
 
-    @SerializedName("nmadres")
+    @SerializedName("nMadres")
     private Integer nMadres;
 
-    @SerializedName("npadres")
+    @SerializedName("nPadres")
     private Integer nPadres;
 
-    @SerializedName("fechainiciocubricion")
+    @SerializedName("fechaInicioCubricion")
     private String fechaInicioCubricion;
 
-    @SerializedName("fechafincubricion")
+    @SerializedName("fechaFinCubricion")
     private String fechaFinCubricion;
 
-    public Cubricion() {}
+    public Cubricion() {
+    }
 
-    public String getId_lote() { return id_lote; }
-    public void setId_lote(String id_lote) { this.id_lote = id_lote; }
+    public Cubricion(String id_lote, String id_explotacion, String nombre_lote, Integer nMadres, Integer nPadres, String fechaInicioCubricion, String fechaFinCubricion) {
+        this.id_lote = id_lote;
+        this.id_explotacion = id_explotacion;
+        this.nombre_lote = nombre_lote;
+        this.nMadres = nMadres;
+        this.nPadres = nPadres;
+        this.fechaInicioCubricion = fechaInicioCubricion;
+        this.fechaFinCubricion = fechaFinCubricion;
+    }
 
-    public String getId_explotacion() { return id_explotacion; }
-    public void setId_explotacion(String id_explotacion) { this.id_explotacion = id_explotacion; }
+    public String getId_lote() {
+        return id_lote;
+    }
 
-    public String getNombre_lote() { return nombre_lote; }
-    public void setNombre_lote(String nombre_lote) { this.nombre_lote = nombre_lote; }
+    public void setId_lote(String id_lote) {
+        this.id_lote = id_lote;
+    }
 
-    public Integer getnMadres() { return nMadres; }
-    public void setnMadres(Integer nMadres) { this.nMadres = nMadres; }
+    public String getId_explotacion() {
+        return id_explotacion;
+    }
 
-    public Integer getnPadres() { return nPadres; }
-    public void setnPadres(Integer nPadres) { this.nPadres = nPadres; }
+    public void setId_explotacion(String id_explotacion) {
+        this.id_explotacion = id_explotacion;
+    }
 
-    public String getFechaInicioCubricion() { return fechaInicioCubricion; }
-    public void setFechaInicioCubricion(String fechaInicioCubricion) { this.fechaInicioCubricion = fechaInicioCubricion; }
+    public String getNombre_lote() {
+        return nombre_lote;
+    }
 
-    public String getFechaFinCubricion() { return fechaFinCubricion; }
-    public void setFechaFinCubricion(String fechaFinCubricion) { this.fechaFinCubricion = fechaFinCubricion; }
+    public void setNombre_lote(String nombre_lote) {
+        this.nombre_lote = nombre_lote;
+    }
+
+    public Integer getnMadres() {
+        return nMadres;
+    }
+
+    public void setnMadres(Integer nMadres) {
+        this.nMadres = nMadres;
+    }
+
+    public Integer getnPadres() {
+        return nPadres;
+    }
+
+    public void setnPadres(Integer nPadres) {
+        this.nPadres = nPadres;
+    }
+
+    public String getFechaInicioCubricion() {
+        return fechaInicioCubricion;
+    }
+
+    public void setFechaInicioCubricion(String fechaInicioCubricion) {
+        this.fechaInicioCubricion = fechaInicioCubricion;
+    }
+
+    public String getFechaFinCubricion() {
+        return fechaFinCubricion;
+    }
+
+    public void setFechaFinCubricion(String fechaFinCubricion) {
+        this.fechaFinCubricion = fechaFinCubricion;
+    }
 }

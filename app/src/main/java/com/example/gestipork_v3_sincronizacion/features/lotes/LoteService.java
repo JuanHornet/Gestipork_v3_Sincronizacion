@@ -6,8 +6,7 @@ import com.example.gestipork_v3_sincronizacion.data.models.*;
 public interface LoteService {
 
     // ---- 1:1
-    String crearLoteConHijos(String idExplotacion, String nombreLote,
-                             String raza, String color, int estado, int nIniciales);
+    String crearLoteConHijos(String idExplotacion, String nombreLote, String raza);
 
     Paridera getParidera(String idLote);
     Cubricion getCubricion(String idLote);

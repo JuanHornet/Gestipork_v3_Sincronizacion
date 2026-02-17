@@ -42,11 +42,11 @@ public class LoteServiceImpl implements LoteService {
 
     // ---------- 1:1 ----------
     @Override
-    public String crearLoteConHijos(String idExplotacion, String nombreLote,
-                                    String raza, String color, int estado, int nIniciales) {
-        // Delegamos en el método transaccional del DBHelper que ya preparamos
-        return dbh.crearLoteConHijos(idExplotacion, nombreLote, raza, color, estado, nIniciales);
+    public String crearLoteConHijos(String idExplotacion, String nombreLote, String raza) {
+        // Delegamos en el método transaccional del DBHelper
+        return dbh.crearLoteConHijos(idExplotacion, nombreLote, raza);
     }
+
 
     @Override
     public Paridera getParidera(String idLote) { return parRepo.findByLote(idLote); }

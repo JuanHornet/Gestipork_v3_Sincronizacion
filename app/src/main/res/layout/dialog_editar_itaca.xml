@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="DCER"
+            android:paddingTop="10dp"
+            android:textStyle="bold"/>
+
+        <EditText
+            android:id="@+id/etDcer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textCapCharacters"
+            android:hint="Ej: AA267890" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nº animales"
+            android:textStyle="bold"/>
+
+        <EditText
+            android:id="@+id/etNAnimales"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nº madres"
+            android:paddingTop="10dp"
+            android:textStyle="bold"/>
+        <EditText
+            android:id="@+id/etNMadres"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nº padres"
+            android:paddingTop="10dp"
+            android:textStyle="bold"/>
+        <EditText
+            android:id="@+id/etNPadres"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Fecha primer nacimiento (YYYY-MM-DD)"
+            android:paddingTop="10dp"
+            android:textStyle="bold"/>
+        <EditText
+            android:id="@+id/etFechaPrim"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="dd-MM-yyyy"
+            android:focusable="false"
+            android:clickable="true" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Fecha último nacimiento (YYYY-MM-DD)"
+            android:paddingTop="10dp"
+            android:textStyle="bold"/>
+        <EditText
+            android:id="@+id/etFechaUlt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="dd-MM-yyyy"
+            android:focusable="false"
+            android:clickable="true" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Raza"
+            android:paddingTop="10dp"
+            android:textStyle="bold"/>
+        <Spinner
+            android:id="@+id/spRaza"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Color"
+            android:paddingTop="10dp"
+            android:textStyle="bold"/>
+        <Spinner
+            android:id="@+id/spColor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Crotales solicitados"
+            android:paddingTop="10dp"
+            android:textStyle="bold"/>
+        <EditText
+            android:id="@+id/etCrotales"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number" />
+
+
+    </LinearLayout>
+</ScrollView>

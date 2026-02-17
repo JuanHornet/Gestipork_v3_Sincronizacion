@@ -13,8 +13,7 @@ import com.example.gestipork_v3_sincronizacion.base.FechaUtils;
 import com.example.gestipork_v3_sincronizacion.data.db.DBHelper;
 import com.example.gestipork_v3_sincronizacion.data.repo.*;
 import com.example.gestipork_v3_sincronizacion.sync.SincronizadorMembresias;
-// Si tienes SessionManager, descomenta la siguiente línea y úsalo para obtener el userId:
-// import com.example.gestipork_v3_sincronizacion.base.SessionManager;
+import com.example.gestipork_v3_sincronizacion.auth.SessionManager;
 
 import java.util.Set;
 
@@ -55,20 +54,17 @@ public class SyncWorker extends Worker {
         String lastSyncPesos    = prefs.getString(KEY_LAST_SYNC_PESOS,    "1970-01-01T00:00:00");
         String now = FechaUtils.ahoraIso();
 
-        boolean ok = true;
+        boolean ok = true
+                ;
 
         // ============ PASO 0: Membresías (obtener explotaciones autorizadas) ============
         Set<String> explotacionesAutorizadas;
         try {
-            // Obtén el id de usuario desde tu sesión:
-            // Si tienes SessionManager:
-            // String userId = new SessionManager(ctx).getUserId();
-            // Si lo guardas en SharedPreferences de auth:
-            String userId = ctx.getSharedPreferences("auth", Context.MODE_PRIVATE)
-                    .getString("user_id", "");
+            SessionManager sm = new SessionManager(ctx);
+            String userId = sm.getUserId();   // Usa SIEMPRE SessionManager
 
             if (TextUtils.isEmpty(userId)) {
-                Log.w(TAG, "No hay userId en sesión; se aborta sincronización.");
+                Log.w(TAG, "No hay userId en sesión (SessionManager); se aborta sincronización.");
                 return Result.retry();
             }
 
@@ -77,7 +73,6 @@ public class SyncWorker extends Worker {
 
             if (explotacionesAutorizadas == null || explotacionesAutorizadas.isEmpty()) {
                 Log.i(TAG, "Usuario sin explotaciones autorizadas; nada que sincronizar.");
-                // Éxito “vacío”: no avanzamos cursores del resto para no falsear marcas.
                 return Result.success();
             }
 

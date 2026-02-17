@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/coordinator_lotes"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.lotes.LotesActivity">
+
+    <!-- Toolbar estándar reutilizada -->
+    <include
+        layout="@layout/toolbar_estandar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- Contenido principal -->
+    <LinearLayout
+        android:id="@+id/content_lotes"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:padding="16dp">
+
+        <!-- Texto con la explotación -->
+        <TextView
+            android:id="@+id/txtTituloLotes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lotes de la explotación"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Mensaje cuando no hay lotes -->
+        <TextView
+            android:id="@+id/txtLotesVacio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No hay lotes para esta explotación."
+            android:textSize="16sp"
+            android:textColor="@android:color/darker_gray"
+            android:gravity="center"
+            android:padding="16dp"
+            android:visibility="gone" />
+
+        <!-- Lista de lotes -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerLotes"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:paddingTop="8dp"
+            android:paddingBottom="96dp"
+            android:clipToPadding="false" />
+
+
+    </LinearLayout>
+
+    <!-- FAB: hijo directo del CoordinatorLayout -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddLote"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="120dp"
+        app:fabSize="normal"
+        app:srcCompat="@drawable/ic_add"
+        android:contentDescription="Añadir lote"
+        app:tint="@android:color/white"
+        app:backgroundTint="@color/principal"
+        android:elevation="8dp" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

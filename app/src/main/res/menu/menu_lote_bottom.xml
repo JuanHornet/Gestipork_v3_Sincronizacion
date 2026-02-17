@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_contar"
+        android:icon="@drawable/ic_contar"
+        android:title="Contar" />
+
+    <item
+        android:id="@+id/nav_pesar"
+        android:icon="@drawable/ic_pesar"
+        android:title="Pesar" />
+
+    <item
+        android:id="@+id/nav_baja"
+        android:icon="@drawable/ic_baja"
+        android:title="Baja" />
+
+    <item
+        android:id="@+id/nav_notas"
+        android:icon="@drawable/ic_notas"
+        android:title="Notas" />
+
+</menu>

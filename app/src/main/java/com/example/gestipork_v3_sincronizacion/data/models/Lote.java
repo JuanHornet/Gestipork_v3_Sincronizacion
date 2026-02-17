@@ -17,15 +17,6 @@ public class Lote extends BaseEntity {
     @SerializedName("nombre_lote")
     private String nombre_lote;
 
-    @SerializedName("id_paridera")
-    private String id_paridera;
-
-    @SerializedName("id_cubricion")
-    private String id_cubricion;
-
-    @SerializedName("id_itaca")
-    private String id_itaca;
-
     @SerializedName("raza")
     private String raza;
 
@@ -49,15 +40,6 @@ public class Lote extends BaseEntity {
 
     public String getNombre_lote() { return nombre_lote; }
     public void setNombre_lote(String nombre_lote) { this.nombre_lote = nombre_lote; }
-
-    public String getId_paridera() { return id_paridera; }
-    public void setId_paridera(String id_paridera) { this.id_paridera = id_paridera; }
-
-    public String getId_cubricion() { return id_cubricion; }
-    public void setId_cubricion(String id_cubricion) { this.id_cubricion = id_cubricion; }
-
-    public String getId_itaca() { return id_itaca; }
-    public void setId_itaca(String id_itaca) { this.id_itaca = id_itaca; }
 
     public String getRaza() { return raza; }
     public void setRaza(String raza) { this.raza = raza; }

@@ -3,6 +3,7 @@ package com.example.gestipork_v3_sincronizacion.data.repo;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.example.gestipork_v3_sincronizacion.data.db.DBHelper;
 import com.example.gestipork_v3_sincronizacion.data.models.Lote;
@@ -17,10 +18,14 @@ import java.util.List;
 import java.util.Map;
 
 import retrofit2.Response;
+import com.example.gestipork_v3_sincronizacion.base.FechaUtils;
+
+
 
 public class LoteRepository {
 
     private static final String TABLA = "lotes";
+    private static final String TAG = "LoteRepository";
     private final DBHelper dbh;
     private final GenericSupabaseService api;
 
@@ -28,6 +33,25 @@ public class LoteRepository {
         this.dbh = dbh;
         this.api = ApiClient.get().create(GenericSupabaseService.class);
     }
+    // ===== CRUD simple local: actualizar solo nombre y raza =====
+    public boolean actualizarNombreYRaza(Lote lote) {
+        SQLiteDatabase db = dbh.getWritableDatabase();
+        ContentValues v = new ContentValues();
+        v.put("nombre_lote", lote.getNombre_lote());
+        v.put("raza", lote.getRaza());
+        v.put("fecha_actualizacion", FechaUtils.ahoraIso());
+        v.put("sincronizado", 0); // marcar para subir a Supabase
+
+        int updated = db.update(
+                TABLA,
+                v,
+                "id = ?",
+                new String[]{ lote.getId() }
+        );
+
+        return updated > 0;
+    }
+
 
     // ========= SYNC: PUSH (local -> Supabase) =========
     public int pushPendientes() {
@@ -204,4 +228,115 @@ public class LoteRepository {
     private int getInt(JsonObject o, String k) {
         return o.has(k) && !o.get(k).isJsonNull() ? o.get(k).getAsInt() : 0;
     }
+
+    // ========= QUERIES LOCALES PARA LA UI =========
+    public Lote findById(String idLote) {
+        SQLiteDatabase db = dbh.getReadableDatabase();
+        Lote lote = null;
+
+        // Usamos nombres de columnas coherentes con obtenerNoSincronizados/upsertLocal
+        String sql = "SELECT id, id_explotacion, nDisponibles, nIniciales, " +
+                "nombre_lote, raza, estado, color, fecha_actualizacion, " +
+                "eliminado, fecha_eliminado, sincronizado " +
+                "FROM " + TABLA + " WHERE id = ? LIMIT 1";
+
+        try (Cursor c = db.rawQuery(sql, new String[]{idLote})) {
+            if (c.moveToFirst()) {
+                lote = new Lote();
+                lote.setId(c.getString(c.getColumnIndexOrThrow("id")));
+                lote.setId_explotacion(c.getString(c.getColumnIndexOrThrow("id_explotacion")));
+                lote.setnDisponibles(c.getInt(c.getColumnIndexOrThrow("nDisponibles")));
+                lote.setnIniciales(c.getInt(c.getColumnIndexOrThrow("nIniciales")));
+                lote.setNombre_lote(c.getString(c.getColumnIndexOrThrow("nombre_lote")));
+                lote.setRaza(c.getString(c.getColumnIndexOrThrow("raza")));
+                lote.setEstado(c.getInt(c.getColumnIndexOrThrow("estado")));
+                lote.setColor(c.getString(c.getColumnIndexOrThrow("color")));
+                lote.setFecha_actualizacion(c.getString(c.getColumnIndexOrThrow("fecha_actualizacion")));
+                lote.setEliminado(c.getInt(c.getColumnIndexOrThrow("eliminado")));
+                lote.setFecha_eliminado(c.getString(c.getColumnIndexOrThrow("fecha_eliminado")));
+                lote.setSincronizado(c.getInt(c.getColumnIndexOrThrow("sincronizado")));
+            }
+        }
+
+        return lote;
+    }
+
+    /**
+     * Eliminación lógica de un lote y todas sus tablas hijas.
+     * Marca eliminado=1, fecha_eliminado=now, sincronizado=0 en:
+     *  - lotes
+     *  - parideras, cubriciones, itaca
+     *  - acciones, salidas, alimentacion
+     *  - contar, pesar, notas
+     */
+    public boolean eliminarLoteYHijosLogicamente(String idLote, String idExplotacion) {
+        SQLiteDatabase db = dbh.getWritableDatabase();
+        String fechaEliminado = FechaUtils.ahoraIso();
+
+        try {
+            db.beginTransaction();
+
+            // 1) Lote
+            ContentValues vLote = new ContentValues();
+            vLote.put("eliminado", 1);
+            vLote.put("fecha_eliminado", fechaEliminado);
+            vLote.put("sincronizado", 0);
+
+            int filasLote = db.update(
+                    "lotes",
+                    vLote,
+                    "id = ?",
+                    new String[]{idLote}
+            );
+            android.util.Log.d("LoteRepository", "eliminarLote: filasLote=" + filasLote);
+
+            // 2) Plantilla para tablas hijas
+            ContentValues vHijo = new ContentValues();
+            vHijo.put("eliminado", 1);
+            vHijo.put("fecha_eliminado", fechaEliminado);
+            vHijo.put("sincronizado", 0);
+
+            String whereHijo = "id_lote = ? AND id_explotacion = ?";
+            String[] argsHijo = new String[]{idLote, idExplotacion};
+
+            int fParideras   = db.update("parideras",    vHijo, whereHijo, argsHijo);
+            int fCubriciones = db.update("cubriciones",  vHijo, whereHijo, argsHijo);
+            int fItaca       = db.update("itaca",        vHijo, whereHijo, argsHijo);
+            int fAcciones    = db.update("acciones",     vHijo, whereHijo, argsHijo);
+            int fSalidas     = db.update("salidas",      vHijo, whereHijo, argsHijo);
+            int fAlim        = db.update("alimentacion", vHijo, whereHijo, argsHijo);
+            int fContar      = db.update("contar",       vHijo, whereHijo, argsHijo);
+            int fPesar       = db.update("pesos",        vHijo, whereHijo, argsHijo);
+            int fNotas       = db.update("notas",        vHijo, whereHijo, argsHijo);
+
+            android.util.Log.d("LoteRepository", "eliminarLote hijos: parideras=" + fParideras +
+                    ", cubriciones=" + fCubriciones +
+                    ", itaca=" + fItaca +
+                    ", acciones=" + fAcciones +
+                    ", salidas=" + fSalidas +
+                    ", alim=" + fAlim +
+                    ", contar=" + fContar +
+                    ", pesar=" + fPesar +
+                    ", notas=" + fNotas);
+
+            db.setTransactionSuccessful();
+
+            // Consideramos éxito si se ha podido ejecutar todo sin excepciones
+            // y al menos el lote se ha marcado (o ya lo estaba).
+            return filasLote >= 0;
+
+        } catch (Exception e) {
+            android.util.Log.e("LoteRepository", "Error eliminando lógicamente lote y sus hijos", e);
+            return false;
+        } finally {
+            try {
+                db.endTransaction();
+            } catch (Exception ignore) {}
+            db.close();
+        }
+    }
+
 }
+
+
+

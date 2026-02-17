@@ -13,7 +13,6 @@ import com.example.gestipork_v3_sincronizacion.network.services.GenericSupabaseS
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import java.text.SimpleDateFormat;
 import java.util.*;
 import retrofit2.Response;
 

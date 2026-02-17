@@ -37,11 +37,14 @@ import com.example.gestipork_v3_sincronizacion.base.Permisos;
 import com.example.gestipork_v3_sincronizacion.data.db.DBHelper;
 import com.example.gestipork_v3_sincronizacion.data.repo.ExplotacionMembersRepository;
 import com.example.gestipork_v3_sincronizacion.network.ApiClient;
+import com.example.gestipork_v3_sincronizacion.sync.SincronizadorManual;
 import com.example.gestipork_v3_sincronizacion.sync.workers.SyncWorker;
 import com.example.gestipork_v3_sincronizacion.ui.explotaciones.InviteMemberDialogFragment;
 import com.example.gestipork_v3_sincronizacion.ui.explotaciones.MembersActivity;
 import com.example.gestipork_v3_sincronizacion.ui.explotaciones.RoleInfoDialogFragment;
 import com.example.gestipork_v3_sincronizacion.ui.login.LoginActivity;
+import com.example.gestipork_v3_sincronizacion.ui.lotes.LotesActivity;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -65,7 +68,8 @@ public class DashboardActivity extends AppCompatActivity {
     private Spinner spinnerExplotaciones;
     private TextView txtVacio;
     private RecyclerView recyclerResumen;
-    private Button btnSincronizar;
+    private Button btnSync;
+
 
     private DBHelper db;
     private ArrayAdapter<String> spinnerAdapter;
@@ -118,6 +122,11 @@ public class DashboardActivity extends AppCompatActivity {
             }
             @Override public void onNothingSelected(AdapterView<?> parent) {}
         });
+
+        btnSync.setOnClickListener(v -> {
+            Toast.makeText(this, "Sincronizando…", Toast.LENGTH_SHORT).show();
+            SincronizadorManual.sincronizarAhora(this);
+        });
     }
 
     private void bindViews() {
@@ -125,13 +134,26 @@ public class DashboardActivity extends AppCompatActivity {
         spinnerExplotaciones = findViewById(R.id.spinner_explotaciones);
         txtVacio = findViewById(R.id.txtVacio);
         recyclerResumen = findViewById(R.id.recycler_resumen);
-        btnSincronizar = findViewById(R.id.btnSincronizar);
+        btnSync = findViewById(R.id.btnSync);
+
+
     }
+
+
 
     private void setupToolbar() {
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) getSupportActionBar().setTitle("GestiPork");
         toolbar.setNavigationIcon(null);
+
+        // Poner los tres puntos en blanco
+        toolbar.post(() -> {
+            if (toolbar.getOverflowIcon() != null) {
+                toolbar.getOverflowIcon().setTint(
+                        androidx.core.content.ContextCompat.getColor(this, android.R.color.white)
+                );
+            }
+        });
     }
 
     @Override
@@ -157,11 +179,12 @@ public class DashboardActivity extends AppCompatActivity {
 
     private void setupRecycler() {
         resumenAdapter = new ResumenAdapter(this, new ResumenItem(0, 0, 0, 0, null));
+        recyclerResumen.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
         recyclerResumen.setAdapter(resumenAdapter);
     }
 
     private void setupSyncButton() {
-        btnSincronizar.setOnClickListener(v -> {
+        btnSync.setOnClickListener(v -> {
             OneTimeWorkRequest req = new OneTimeWorkRequest.Builder(SyncWorker.class).build();
             WorkManager.getInstance(getApplicationContext()).enqueue(req);
             Toast.makeText(this, "Sincronización lanzada", Toast.LENGTH_SHORT).show();
@@ -386,15 +409,16 @@ public class DashboardActivity extends AppCompatActivity {
             });
 
             h.btnVerLotes.setOnClickListener(v -> {
-                try {
-                    Class<?> target = Class.forName(LOTES_TARGET_CLASS);
-                    Intent i = new Intent(ctx, target);
-                    i.putExtra("id_explotacion", data.idExplotacion);
-                    ctx.startActivity(i);
-                } catch (ClassNotFoundException e) {
-                    Toast.makeText(ctx, "Pantalla de Lotes no disponible aún", Toast.LENGTH_SHORT).show();
+                if (data.idExplotacion == null) {
+                    Toast.makeText(ctx, "Selecciona una explotación", Toast.LENGTH_SHORT).show();
+                    return;
                 }
+                Intent i = new Intent(ctx, LotesActivity.class);
+                i.putExtra("id_explotacion", data.idExplotacion);
+                ctx.startActivity(i);
             });
+
+
         }
 
         @Override

@@ -5,7 +5,7 @@ public final class Permisos {
 
     public static boolean puede(String accion, String rol) {
         switch (accion) {
-            case "GESTION_MIEMBROS":   return "owner".equals(rol) || "manager".equals(rol);
+            case "GESTION_MIEMBROS":   return "owner".equalsIgnoreCase(rol) || "manager".equalsIgnoreCase(rol);
             case "BORRAR_EXPLOTACION": return "owner".equals(rol);
             case "EDITAR_EXPLOTACION": return "owner".equals(rol) || "manager".equals(rol);
             case "CRUD_DATOS":         return !"viewer".equals(rol);
